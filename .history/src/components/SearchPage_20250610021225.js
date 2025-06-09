@@ -1,45 +1,27 @@
+// src/components/SearchPage.js
 import React, { useState } from 'react';
 import { Container, Row, Col, Form, Button, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 
-const SearchPage = () => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [loading, setLoading] = useState(false);
-
   const handleSearch = async (e) => {
-    e.preventDefault();
-    setHasSearched(true);
-    setLoading(true);
+  e.preventDefault();
+  setHasSearched(true);
 
-    try {
-      const query = searchTerm.trim();
-      const response = await fetch(`/.netlify/functions/get-veterans?q=${encodeURIComponent(query)}`);
-      const data = await response.json();
-      setSearchResults(data);
-    } catch (error) {
-      console.error('Error fetching veterans:', error);
-      setSearchResults([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getFlagClass = (country) => {
-    if (country === 'Denmark') return 'flag-icon flag-denmark';
-    return 'flag-icon flag-us';
-  };
+  const query = searchTerm.trim();
+  const res = await fetch(`/.netlify/functions/get-veterans?q=${encodeURIComponent(query)}`);
+  const data = await res.json();
+  setSearchResults(data);
+};
 
   return (
     <div className="search-container">
       <Container>
         <div className="search-header">
           <div>
-            <img src="/logo.png" alt="Logo" className="search-logo" />
+          <img src="/logo.png" alt="Logo" className="search-logo"/>
           </div>
           <h1 className="search-title">BETWEEN ME AND YUSAN</h1>
-
+          
           <Form onSubmit={handleSearch} className="search-form">
             <Row>
               <Col xs={8}>
@@ -60,13 +42,11 @@ const SearchPage = () => {
           </Form>
         </div>
 
-        {loading && <p className="text-center mt-4">Loading results...</p>}
-
-        {hasSearched && !loading && (
+        {hasSearched && (
           <div className="results-container">
             {searchResults.length > 0 ? (
               searchResults.map((veteran) => (
-                <Card key={veteran._id || veteran.id} className="veteran-card">
+                <Card key={veteran.id} className="veteran-card">
                   <Row className="align-items-center">
                     <Col md={3} className="text-center">
                       <img
@@ -107,6 +87,5 @@ const SearchPage = () => {
       </Container>
     </div>
   );
-};
 
 export default SearchPage;
