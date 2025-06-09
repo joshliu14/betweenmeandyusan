@@ -263,13 +263,6 @@
   padding: 100px 0 50px 0;
 }
 
-.search-logo {
-  display: block;
-  margin: 0 auto;        /* centers the image horizontally */
-  max-width: 150px;      /* adjust size as needed */
-  height: auto;          /* maintain aspect ratio */
-}
-
 .search-header {
   text-align: center;
   margin-bottom: 50px;

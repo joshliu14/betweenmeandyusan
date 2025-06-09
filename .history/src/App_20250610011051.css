@@ -121,7 +121,7 @@
 
 /* Top section hover effects */
 .top-button-group:hover .top-shape {
-  fill: #a82329 !important; /* Darker red on hover */
+  fill: #ff6b6b !important; /* Lighter red on hover */
   transition: fill 0.3s ease;
 }
 
@@ -133,7 +133,7 @@
 
 /* Bottom section hover effects */
 .bottom-button-group:hover .bottom-shape {
-  fill: #002356 !important; /* Darker blue on hover */
+  fill: #4ecdc4 !important; /* Lighter blue on hover */
   transition: fill 0.3s ease;
 }
 
@@ -145,11 +145,11 @@
 
 /* Add subtle glow effect on hover */
 .top-button-group:hover {
-  filter: drop-shadow(0 0 20px rgba(168, 35, 41, 0.5));
+  filter: drop-shadow(0 0 20px rgba(255, 107, 107, 0.5));
 }
 
 .bottom-button-group:hover {
-  filter: drop-shadow(0 0 20px rgba(0, 35, 86, 0.5));
+  filter: drop-shadow(0 0 20px rgba(78, 205, 196, 0.5));
 }
 
 /* Animation for the shapes */
@@ -160,6 +160,17 @@
 .top-text, .bottom-text {
   transition: fill 0.3s ease, transform 0.3s ease;
   transform-origin: center;
+}
+
+/* Active state (when clicked) */
+.top-button-group:active .top-shape {
+  fill: #e55555 !important;
+  transform: scale(0.98);
+}
+
+.bottom-button-group:active .bottom-shape {
+  fill: #3bb5ae !important;
+  transform: scale(0.98);
 }
 
 /* Add a subtle pulse animation */
@@ -263,16 +274,19 @@
   padding: 100px 0 50px 0;
 }
 
-.search-logo {
-  display: block;
-  margin: 0 auto;        /* centers the image horizontally */
-  max-width: 150px;      /* adjust size as needed */
-  height: auto;          /* maintain aspect ratio */
-}
-
 .search-header {
   text-align: center;
   margin-bottom: 50px;
+}
+
+.tree-icon {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 30px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Cpath d='M100 180 L90 140 L110 140 Z' fill='%23654321'/%3E%3Cellipse cx='100' cy='80' rx='60' ry='60' fill='%23228B22'/%3E%3Cpath d='M100 80 L80 60 L85 65 L90 55 L95 65 L100 50 L105 65 L110 55 L115 65 L120 60 Z' fill='%2332CD32'/%3E%3Cellipse cx='70' cy='140' rx='15' ry='20' fill='%23000'/%3E%3Cellipse cx='130' cy='140' rx='15' ry='20' fill='%23000'/%3E%3C/svg%3E") no-repeat center;
+  background-size: contain;
+  opacity: 0;
+  animation: fadeInUp 1s ease-out forwards;
 }
 
 @keyframes fadeInUp {
