@@ -116,11 +116,17 @@ exports.handler = async (event) => {
 
   try {
     const db = await connectToDatabase();
+    const contentType = event.headers['content-type'] || '';
     
     // Route based on content type
     let result;
+    if (contentType.includes('multipart/form-data')) {
+      // Handle file upload
+      result = await handleFileUpload(event, db);
+    } else {
       // Handle story submission
-    result = await handleStorySubmission(event, db);
+      result = await handleStorySubmission(event, db);
+    }
 
     return {
       ...result,

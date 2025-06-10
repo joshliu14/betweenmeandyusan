@@ -1,0 +1,30 @@
+[build]
+  publish = "build"
+  command = "npm run build"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+
+# Increase function timeout for file uploads
+[[functions]]
+  function = "upload-media"
+  [functions.environment]
+    AWS_LAMBDA_JS_RUNTIME = "nodejs18.x"
+  [functions.config]
+    timeout = 30
+
+[[functions]]
+  function = "get-media"
+  [functions.config]
+    timeout = 30
+
+# Environment variables needed:
+# MONGO_URI=your_mongodb_connection_string

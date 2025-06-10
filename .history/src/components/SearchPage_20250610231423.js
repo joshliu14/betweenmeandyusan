@@ -147,7 +147,7 @@ const SearchPage = () => {
         </Card>
       );
     });
-  }, [searchResults, handleVeteranClick, truncateStory, STATIC_VETERAN_IMAGES]);
+  }, [searchResults, handleVeteranClick, getFlagClass, truncateStory, STATIC_VETERAN_IMAGES]);
   // --- END OF CHANGES FOR ALTERNATING IMAGES ---
 
   return (

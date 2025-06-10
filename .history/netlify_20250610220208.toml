@@ -1,0 +1,29 @@
+[build]
+  command = "npm run build"
+  publish = "build"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[functions."upload-media"]
+  timeout = 30
+  memory = 1024
+  [functions."upload-media".environment]
+    AWS_LAMBDA_JS_RUNTIME = "nodejs18.x"
+
+[functions."get-veterans"]
+  timeout = 20
+
+# Dev config to avoid port collision
+[dev]
+  autoLaunch = true
+  framework = "#custom"
+  targetPort = 8888  # Change this if your app runs on 3000
+
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"

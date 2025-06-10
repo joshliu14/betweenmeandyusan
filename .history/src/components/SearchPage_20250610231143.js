@@ -65,6 +65,10 @@ const SearchPage = () => {
     navigate(`/veteran/bjarnechristensen`);
   }, [navigate]);
 
+  const getFlagClass = useCallback((country) => {
+    return country === 'Denmark' ? 'flag-icon flag-denmark' : 'flag-icon flag-us';
+  }, []);
+
   const truncateStory = useCallback((story, maxLength = 200) => {
     if (!story) return '';
     if (story.length <= maxLength) return story;
@@ -121,6 +125,12 @@ const SearchPage = () => {
                 <div className="veteran-info">
                   <h3 className="veteran-name">
                     {veteran.name}
+                    {veteran.country && (
+                      <span
+                        className={getFlagClass(veteran.country)}
+                        aria-label={`${veteran.country} flag`}
+                      ></span>
+                    )}
                   </h3>
                   <div className="veteran-details">
                     {veteran.location && (
@@ -147,7 +157,7 @@ const SearchPage = () => {
         </Card>
       );
     });
-  }, [searchResults, handleVeteranClick, truncateStory, STATIC_VETERAN_IMAGES]);
+  }, [searchResults, handleVeteranClick, getFlagClass, truncateStory, STATIC_VETERAN_IMAGES]);
   // --- END OF CHANGES FOR ALTERNATING IMAGES ---
 
   return (

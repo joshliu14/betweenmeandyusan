@@ -9,7 +9,6 @@ import PortalPage from './components/PortalPage';
 import StorySubmissionPage from './components/StorySubmissionPage';
 import Navigation from './components/Navigation';
 import VeteranDetailPage from './components/VeteranDetailPage';
-import StaticPage from './components/StaticPage';
 
 function App() {
   return (
@@ -22,7 +21,6 @@ function App() {
           <Route path="/portal" element={<PortalPage />} />
           <Route path="/submit-story" element={<StorySubmissionPage />} />
           <Route path="/veteran/:id" element={<VeteranDetailPage />} />
-          <Route path="/veteran/bjarnechristensen" element={<StaticPage />} />
         </Routes>
       </div>
     </Router>

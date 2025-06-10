@@ -1,0 +1,22 @@
+[build]
+  publish = "build"
+  command = "npm run build"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[functions."upload-media"]
+  timeout = 30
+  [functions."upload-media".environment]
+    AWS_LAMBDA_JS_RUNTIME = "nodejs18.x"
+
+[functions."get-media"]
+  timeout = 30
+
+[[headers]]
+  for = "/.netlify/functions/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"

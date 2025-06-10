@@ -13,18 +13,18 @@ const SearchPage = () => {
   const handleSearch = useCallback(async (e) => {
     e.preventDefault();
     const query = searchTerm.trim();
-
+    
     setHasSearched(true);
     setLoading(true);
     setError('');
-
+    
     try {
       const response = await fetch(`/.netlify/functions/get-veterans?q=${encodeURIComponent(query)}`);
-
+      
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: Failed to fetch veterans`);
       }
-
+      
       const data = await response.json();
       setSearchResults(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -41,14 +41,14 @@ const SearchPage = () => {
     setHasSearched(true);
     setLoading(true);
     setError('');
-
+    
     try {
       const response = await fetch('/.netlify/functions/get-veterans');
-
+      
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: Failed to fetch veterans`);
       }
-
+      
       const data = await response.json();
       setSearchResults(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -61,9 +61,12 @@ const SearchPage = () => {
   }, []);
 
   const handleVeteranClick = useCallback((veteranId) => {
-    // This always redirects to a specific static veteran page, as requested.
-    navigate(`/veteran/bjarnechristensen`);
+    navigate(`/veteran/${veteranId}`);
   }, [navigate]);
+
+  const getFlagClass = useCallback((country) => {
+    return country === 'Denmark' ? 'flag-icon flag-denmark' : 'flag-icon flag-us';
+  }, []);
 
   const truncateStory = useCallback((story, maxLength = 200) => {
     if (!story) return '';
@@ -71,25 +74,14 @@ const SearchPage = () => {
     return story.substring(0, maxLength).trim() + '...';
   }, []);
 
-  // --- START OF CHANGES FOR ALTERNATING IMAGES ---
-  // Define your array of static image paths here.
-  // Ensure these images are in your 'public' folder.
-  const STATIC_VETERAN_IMAGES = useMemo(() => [
-    '/bjarne.png', // Path to your first static image
-    '/cresente.png'  // Path to your second static image
-  ], []); // Memoize this array as it won't change
-
   // Memoize veteran cards to prevent unnecessary re-renders
   const veteranCards = useMemo(() => {
-    return searchResults.map((veteran, index) => { // <--- Added 'index' here
+    return searchResults.map((veteran) => {
       const veteranId = veteran._id || veteran.id;
       const veteranKey = `${veteranId}-${veteran.name}`;
-
-      // Use the index to select an image from the array, cycling through them
-      const currentStaticImagePath = STATIC_VETERAN_IMAGES[index % STATIC_VETERAN_IMAGES.length];
-
+      
       return (
-        <Card
+        <Card 
           key={veteranKey}
           className="veteran-card clickable-card mb-3"
           onClick={() => handleVeteranClick(veteranId)}
@@ -108,11 +100,11 @@ const SearchPage = () => {
             <Row className="align-items-center">
               <Col md={3} className="text-center mb-3 mb-md-0">
                 <img
-                  src={currentStaticImagePath} // <--- Use the selected static image path
+                  src={veteran.photo || '/default-veteran-photo.jpg'}
                   alt={`Portrait of ${veteran.name}`}
                   className="veteran-photo"
                   onError={(e) => {
-                    e.target.src = '/default-veteran-photo.jpg'; // Fallback if a static image itself fails
+                    e.target.src = '/default-veteran-photo.jpg';
                   }}
                   loading="lazy"
                 />
@@ -121,6 +113,12 @@ const SearchPage = () => {
                 <div className="veteran-info">
                   <h3 className="veteran-name">
                     {veteran.name}
+                    {veteran.country && (
+                      <span 
+                        className={getFlagClass(veteran.country)}
+                        aria-label={`${veteran.country} flag`}
+                      ></span>
+                    )}
                   </h3>
                   <div className="veteran-details">
                     {veteran.location && (
@@ -147,8 +145,7 @@ const SearchPage = () => {
         </Card>
       );
     });
-  }, [searchResults, handleVeteranClick, truncateStory, STATIC_VETERAN_IMAGES]);
-  // --- END OF CHANGES FOR ALTERNATING IMAGES ---
+  }, [searchResults, handleVeteranClick, getFlagClass, truncateStory]);
 
   return (
     <div className="search-container">
@@ -177,8 +174,8 @@ const SearchPage = () => {
                 />
               </Col>
               <Col xs={4}>
-                <Button
-                  type="submit"
+                <Button 
+                  type="submit" 
                   className="search-btn w-100"
                   disabled={loading}
                 >
@@ -228,21 +225,21 @@ const SearchPage = () => {
                 <Card.Body>
                   <h4>No veterans found</h4>
                   <p>
-                    {searchTerm
+                    {searchTerm 
                       ? `No results found for "${searchTerm}". Try different keywords or browse all stories.`
                       : 'No veterans found in the database.'
                     }
                   </p>
                   <div className="mt-3">
-                    <Button
-                      variant="outline-primary"
+                    <Button 
+                      variant="outline-primary" 
                       onClick={handleBrowseAll}
                       className="me-2"
                     >
                       Browse All Stories
                     </Button>
                     {searchTerm && (
-                      <Button
+                      <Button 
                         variant="outline-secondary"
                         onClick={() => {
                           setSearchTerm('');

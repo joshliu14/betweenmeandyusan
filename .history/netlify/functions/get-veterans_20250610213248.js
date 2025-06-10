@@ -1,5 +1,5 @@
 // netlify/functions/get-veterans.js
-const { MongoClient, ObjectId, GridFSBucket } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 
 let cachedClient = null;
 let cachedDb = null;
@@ -13,47 +13,19 @@ const connectToDatabase = async () => {
     await cachedClient.connect();
     cachedDb = cachedClient.db('yusanstories');
   }
-  return cachedDb;
-};
-
-const getMediaFromGridFS = async (db, fileId, type) => {
-  const bucket = new GridFSBucket(db, { 
-    bucketName: type === 'photo' ? 'photos' : 'videos' 
-  });
-  
-  try {
-    const fileInfo = await bucket.find({ _id: new ObjectId(fileId) }).next();
-    if (!fileInfo) {
-      throw new Error('File not found');
-    }
-    
-    const downloadStream = bucket.openDownloadStream(new ObjectId(fileId));
-    const chunks = [];
-    
-    return new Promise((resolve, reject) => {
-      downloadStream.on('data', (chunk) => chunks.push(chunk));
-      downloadStream.on('error', reject);
-      downloadStream.on('end', () => {
-        resolve({
-          buffer: Buffer.concat(chunks),
-          contentType: fileInfo.metadata?.contentType || 'application/octet-stream',
-          filename: fileInfo.filename,
-          size: fileInfo.length
-        });
-      });
-    });
-  } catch (error) {
-    throw new Error(`Failed to retrieve file: ${error.message}`);
-  }
+  return cachedDb.collection('betweenmeandyusan');
 };
 
 const findVeteranById = async (collection, veteranId) => {
+  // Try multiple ID formats
   const queries = [];
   
+  // Try ObjectId if valid
   if (ObjectId.isValid(veteranId)) {
     queries.push({ _id: new ObjectId(veteranId) });
   }
   
+  // Try string variations
   queries.push(
     { _id: veteranId },
     { id: veteranId },
@@ -64,12 +36,12 @@ const findVeteranById = async (collection, veteranId) => {
     try {
       const veteran = await collection.findOne(query);
       if (veteran) {
-        // Transform media URLs to be accessible via this same function
+        // Transform media URLs to be accessible
         if (veteran.photoId) {
-          veteran.photo = `/.netlify/functions/get-veterans?media=${veteran.photoId}&type=photo`;
+          veteran.photo = `/.netlify/functions/get-media?id=${veteran.photoId}&type=photo`;
         }
         if (veteran.videoId) {
-          veteran.videoUrl = `/.netlify/functions/get-veterans?media=${veteran.videoId}&type=video`;
+          veteran.videoUrl = `/.netlify/functions/get-media?id=${veteran.videoId}&type=video`;
         }
         return veteran;
       }
@@ -95,25 +67,28 @@ const searchVeterans = async (collection, searchTerm) => {
     ],
   } : {};
   
-  query.status = { $ne: 'rejected' };
+  // Only show approved stories in search results
+  query.status = { $ne: 'rejected' }; // Show pending and approved
   
   const veterans = await collection.find(query)
-    .limit(50)
-    .sort({ submittedAt: -1 })
+    .limit(50) // Prevent excessive results
+    .sort({ submittedAt: -1 }) // Most recent first
     .toArray();
   
+  // Transform media URLs for each veteran
   return veterans.map(veteran => {
     if (veteran.photoId) {
-      veteran.photo = `/.netlify/functions/get-veterans?media=${veteran.photoId}&type=photo`;
+      veteran.photo = `/.netlify/functions/get-media?id=${veteran.photoId}&type=photo`;
     }
     if (veteran.videoId) {
-      veteran.videoUrl = `/.netlify/functions/get-veterans?media=${veteran.videoId}&type=video`;
+      veteran.videoUrl = `/.netlify/functions/get-media?id=${veteran.videoId}&type=video`;
     }
     return veteran;
   });
 };
 
 exports.handler = async (event) => {
+  // CORS headers
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -121,6 +96,7 @@ exports.handler = async (event) => {
     'Content-Type': 'application/json',
   };
 
+  // Handle preflight requests
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 200, headers, body: '' };
   }
@@ -134,54 +110,8 @@ exports.handler = async (event) => {
   }
 
   try {
-    const db = await connectToDatabase();
-    const { q: searchTerm, id: veteranId, media: mediaId, type } = event.queryStringParameters || {};
-
-    // Handle media requests (formerly get-media functionality)
-    if (mediaId && type) {
-      if (!ObjectId.isValid(mediaId)) {
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({ error: 'Invalid file ID' }),
-        };
-      }
-
-      if (!['photo', 'video'].includes(type)) {
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({ error: 'Type must be photo or video' }),
-        };
-      }
-
-      try {
-        const file = await getMediaFromGridFS(db, mediaId, type);
-        return {
-          statusCode: 200,
-          headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': file.contentType,
-            'Content-Length': file.size.toString(),
-            'Cache-Control': 'public, max-age=31536000',
-            'Content-Disposition': `inline; filename="${file.filename}"`,
-          },
-          body: file.buffer.toString('base64'),
-          isBase64Encoded: true,
-        };
-      } catch (error) {
-        if (error.message.includes('File not found')) {
-          return {
-            statusCode: 404,
-            headers,
-            body: JSON.stringify({ error: 'File not found' }),
-          };
-        }
-        throw error;
-      }
-    }
-
-    const collection = db.collection('betweenmeandyusan');
+    const collection = await connectToDatabase();
+    const { q: searchTerm, id: veteranId } = event.queryStringParameters || {};
 
     // Handle individual veteran detail request
     if (veteranId) {
@@ -199,7 +129,7 @@ exports.handler = async (event) => {
         statusCode: 200,
         headers: {
           ...headers,
-          'Cache-Control': 'public, max-age=300',
+          'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
         },
         body: JSON.stringify(veteran),
       };
@@ -212,7 +142,7 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers: {
         ...headers,
-        'Cache-Control': 'public, max-age=60',
+        'Cache-Control': 'public, max-age=60', // Cache search results for 1 minute
       },
       body: JSON.stringify(veterans),
     };
